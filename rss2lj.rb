@@ -82,7 +82,12 @@ class LiveJournal
       'howmany' => 1,
     })    
     response = @server.call('LJ.XMLRPC.getevents', post_params)
-    Time.parse(response['events'][0]['eventtime'])
+    events = response['events']
+    if events and events.size > 0:
+      return Time.parse(events[0]['eventtime'])
+    else
+      return nil
+    end
   end
 
   def post(subject, body, time, backdated)
@@ -129,7 +134,7 @@ config['feeds'].each do |feed|
     end
 
     backdate = false
-    if most_recent > item.date then
+    if most_recent and most_recent > item.date then
       backdate = true
     else
       most_recent = item.date
