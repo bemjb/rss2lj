@@ -31,10 +31,14 @@ require 'rss/1.0'
 require 'rss/2.0'
 require 'open-uri'
 require 'yaml'
+require 'iconv'
 
 def get_rss(uri) 
   raw_rss = ''
-  open(uri) { |s| raw_rss = s.read }
+  open(uri) do |s|
+    charset = s.charset || 'iso-8859-1' # if a charset isn't specified, default to Latin-1
+    raw_rss = Iconv.conv(charset, 'utf-8', s.read)
+  end
   RSS::Parser.parse(raw_rss, false)
 end
 
@@ -64,6 +68,7 @@ class LiveJournal
 
     def to_params
       return {
+        'ver' => '1',
         'auth_method' => 'challenge',
         'auth_challenge' => @challenge,
         'auth_response' => @hashed_response,
@@ -111,7 +116,7 @@ end
 
 ## MAIN
 if $ARGV.length != 1 then
-  puts "Usage: $0 config.yml"
+  puts "Usage: #{$0} config.yml"
   exit(1)
 end
 config_file = $ARGV[0]
